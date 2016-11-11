@@ -6,12 +6,12 @@ require_once 'clases/Usuario.php';
 require_once 'clases/Producto.php';
 require_once 'clases/Carrito.php';
 require_once 'clases/Estadisticas.php';
-require_once 'clases/Sesion.php';
+require_once 'clases/Auth.php';
 
 try {
-    $session = new Sesion();
+    $auth = Auth::getAuth();
 } catch (Exception $ex) {
-    $error = "Error de sesiones... " . $ex->getMessage();
+    $error = "Error... " . $ex->getMessage();
     include 'vistas/error.php';
     die();
 }
@@ -19,17 +19,15 @@ try {
 try {
     $bd = BD::getConexion();
 } catch (Exception $ex) {
-    $error = "Error de sesiones... " . $ex->getMessage();
+    $error = "Error... " . $ex->getMessage();
     include 'vistas/error.php';
     die();
 }
 
-
-
-if ($session->checkSesion('usuario')) {
-    $usuario = $session->getSesion('usuario');
+if ($auth->compruebaLogin('usuario')) {
+    $usuario = $auth->traeLogin('usuario');
     if (isset($_POST['salir'])) {
-        $session->destroy();
+        $auth->logout();
         include 'vistas/login.php';
     } else if (isset($_POST['volver'])) {
         $productos = Producto::showProducts($bd);
@@ -74,7 +72,7 @@ if ($session->checkSesion('usuario')) {
     if (isset($_POST['login'])) {
         $usuario = Usuario::checkUserCredentials($bd, $_POST['username'], $_POST['password']);
         if ($usuario) {
-            $session->setSesion('usuario', $usuario);
+            $auth->login('usuario', $usuario);
             if ($usuario->getPerfil() == 1) {
                 include 'vistas/panelAdmin.php';
             } else {
